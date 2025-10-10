@@ -50,3 +50,5 @@ env.bak/
 venv.bak/
 
 .vscode/
+
+dataset/
