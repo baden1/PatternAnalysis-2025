@@ -275,3 +275,6 @@ class LayerNorm(nn.Module):
             # apply weight and bias parameters
             x = self.weight[:, None, None] * x + self.bias[:, None, None]
             return x
+
+def convnext_small(**kwargs):
+    return ConvNeXt(depths=[3, 3, 27, 3], dims=[96, 192, 384, 768], **kwargs)
