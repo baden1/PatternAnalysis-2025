@@ -42,7 +42,10 @@ test_dataset = ADNI_Dataset(
 # split test dataset into validation and test sets
 test_size = int(0.5 * len(test_dataset))
 val_size = len(test_dataset) - test_size
-test_dataset, val_dataset = random_split(test_dataset, [test_size, val_size])
+
+# rng generator - set seed for reproducibility
+generator = torch.Generator().manual_seed(0)
+test_dataset, val_dataset = random_split(test_dataset, [test_size, val_size], generator=generator)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
