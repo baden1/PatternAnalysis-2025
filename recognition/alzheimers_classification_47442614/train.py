@@ -16,6 +16,7 @@ import pandas as pd
 
 # device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
 
 # hyperparameters
 batch_size = 32
@@ -28,12 +29,14 @@ best_val_loss = float("inf")
 epochs_without_improvement = 0
 early_stop = False
 
+path = "/home/groups/comp3710/ADNI/AD_NC"
+
 # datasets / dataloaders
 train_dataset = ADNI_Dataset(
-    root_dir=os.path.join("dataset", "AD_NC"), split="train", transform=train_transform
+    root_dir=path, split="train", transform=train_transform
 )
 test_dataset = ADNI_Dataset(
-    root_dir=os.path.join("dataset", "AD_NC"), split="test", transform=test_transform
+    root_dir=path, split="test", transform=test_transform
 )
 
 # split test dataset into validation and test sets
@@ -46,7 +49,8 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 # model
-model = convnext_small(pretrained=False, num_classes=2)
+model = convnext_small(weights=None)
+model.classifier[2] = nn.Linear(in_features=768, out_features=2)
 model = model.to(device)
 
 # loss function
@@ -70,6 +74,7 @@ lr_history = []
 
 # training loop
 for epoch in range(num_epochs):
+    print(f'starting epoch {epoch+1}/{num_epochs}')
     model.train()
     running_loss = 0.0
     for images, labels in train_loader:
@@ -123,7 +128,7 @@ for epoch in range(num_epochs):
         best_val_loss = epoch_val_loss
         epochs_no_improve = 0
         # save the best current model
-        torch.save(model.state_dict(), "convnext.pth")
+        torch.save(model.state_dict(), "convnext2.pth")
     else:
         # increment if the model hasnt improved this epoch
         epochs_without_improvement += 1
@@ -141,12 +146,12 @@ df = pd.DataFrame({
     'val_loss': val_losses,
     'learning_rate': lr_history
 })
-df.to_csv(os.path.join('logs', 'training_log.csv'), index_label='epoch')
+df.to_csv(os.path.join('logs', 'training_log2.csv'), index_label='epoch')
 
 # plot training and validation loss
 plt.figure(figsize=(8, 5))
-plt.plot(range(1, num_epochs + 1), train_losses, label="Train Loss")
-plt.plot(range(1, num_epochs + 1), val_losses, label="Validation Loss")
+plt.plot(range(len(train_losses)), train_losses, label="Train Loss")
+plt.plot(range(len(val_losses)), val_losses, label="Validation Loss")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Training & Validation Loss")
@@ -157,7 +162,7 @@ plt.savefig(os.path.join("figs", "loss_curve.png"))
 
 # plot learning rate history
 plt.clf()
-plt.semilogy(range(1, num_epochs + 1), lr_history)
+plt.semilogy(range(len(lr_history)), lr_history)
 plt.xlabel("Epoch")
 plt.ylabel("Learning Rate")
 plt.title("ReduceLROnPlateau Learning Rate History")
