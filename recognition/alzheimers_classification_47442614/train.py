@@ -12,6 +12,7 @@ import torch.optim as optim
 from torch.utils.data import random_split
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
 
 # device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -133,6 +134,14 @@ for epoch in range(num_epochs):
         early_stop = True
         break
 
+# save loss and lr history to csv
+os.makedirs("logs", exist_ok=True)
+df = pd.DataFrame({
+    'train_loss': train_losses,
+    'val_loss': val_losses,
+    'learning_rate': lr_history
+})
+df.to_csv(os.path.join('logs', 'training_log.csv'), index_label='epoch')
 
 # plot training and validation loss
 plt.figure(figsize=(8, 5))
