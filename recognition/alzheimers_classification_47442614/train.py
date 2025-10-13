@@ -21,6 +21,12 @@ batch_size = 32
 learning_rate = 0.001
 num_epochs = 50
 
+# early stopping parameters
+patience = 10
+best_val_loss = float('inf')
+epochs_without_improvement = 0
+early_stop = False
+
 # datasets / dataloaders
 train_dataset = ADNI_Dataset(root_dir=os.path.join('dataset', 'AD_NC'), split="train", transform=train_transform)
 test_dataset = ADNI_Dataset(root_dir=os.path.join('dataset', 'AD_NC'), split="test", transform=test_transform)
@@ -89,8 +95,23 @@ for epoch in range(num_epochs):
           f"Val Loss: {epoch_val_loss:.4f} "
           f"Val Acc: {val_accuracy:.4f}")
     
-# save model
-torch.save(model.state_dict(), "convnext.pth")
+    # early stopping
+    if epoch_val_loss < best_val_loss:
+        # made a better model - reset patience counter
+        best_val_loss = epoch_val_loss
+        epochs_no_improve = 0
+        # save the best current model
+        torch.save(model.state_dict(), "convnext.pth")
+    else:
+        # increment if the model hasnt improved this epoch
+        epochs_without_improvement += 1
+
+    if epochs_without_improvement >= patience:
+        # stop if no improvement over the patience limit
+        print(f"Early stopping at epoch {epoch+1}")
+        early_stop = True
+        break
+
     
 # plot training and validation loss
 plt.figure(figsize=(8,5))
