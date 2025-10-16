@@ -30,29 +30,63 @@ model.load_state_dict(state_dict)
 model = model.to(device)
 model.eval()
 
-results = []
+def predict_test_set():
+    """Predict image labels for every image in the test set."""
 
-correct = 0
-total = 0
-for images, labels in test_loader:
+    results = []
+    correct = 0
+    total = 0
+    for images, labels in test_loader:
+        with torch.no_grad():
+            for images, labels in test_loader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+
+                _, predicted = torch.max(outputs, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+                for image, label in zip(labels.cpu().numpy(), predicted.cpu().numpy()):
+                    results.append({
+                        "true_label": label,
+                        "predicted_label": predicted.cpu().numpy(),
+                    })
+
+    # save results
+    df = pd.DataFrame(results)
+    df.to_csv("test_results.csv", index=True, index_label="image")
+
+    # evaluate accuracy
+    print(f"Test Accuracy: {100 * correct / total:.2f}%")
+
+
+def predict_single_image(image_path):
+    """Predicts the label of a single image and displays the image and prediction
+
+    Args:
+        image_path (str): Path to the image to predict
+    """
+
+    # load image
+    image = Image.open(image_path).convert("RGB")
+
+    # apply test transform and turn into size-1 batch
+    image_tensor = test_transform(image).unsqueeze(0).to(device)  # Add batch dimension
+
+    # predict
+    model.eval()
     with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
+        outputs = model(image_tensor)
+        _, predicted = torch.max(outputs, 1)
 
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+    pred_index = int(predicted.item())
+    pred_label = test_dataset.classes[pred_index]
 
-            for image, label in zip(labels.cpu().numpy(), predicted.cpu().numpy()):
-                results.append({
-                    "true_label": label,
-                    "predicted_label": predicted.cpu().numpy(),
-                })
+    plt.imshow(image)
+    plt.title(f'Predicted: {pred_label}')
+    plt.savefig(os.path.join('figs', 'image_with_prediction.png'))
 
-# save results
-df = pd.DataFrame(results)
-df.to_csv("test_results.csv", index=True, index_label="image")
 
-# evaluate accuracy
-print(f"Test Accuracy: {100 * correct / total:.2f}%")
+if __name__ == "__main__":
+    predict_single_image(os.path.join('dataset', 'AD_NC', 'test', 'AD', '388206_78.jpeg'))
+    
