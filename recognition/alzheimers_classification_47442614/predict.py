@@ -1,6 +1,8 @@
 from dataset import ADNI_Dataset, train_transform, test_transform
 import torch
 from torch.utils.data import DataLoader, random_split
+# from torchvision.models import convnext_small
+from modules import convnext_small
 import pandas as pd
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -22,7 +24,9 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 # load model
-model = torch.load("convnext.pth")
+state_dict = torch.load("convnext.pth")
+model = convnext_small(num_classes=2)
+model.load_state_dict(state_dict)
 model = model.to(device)
 model.eval()
 

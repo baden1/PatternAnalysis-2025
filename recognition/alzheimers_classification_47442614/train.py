@@ -4,7 +4,6 @@ Contains the training loop for the ConvNeXt model on the ADNI dataset.
 """
 
 import torch
-from torchvision.models import convnext_small
 from dataset import ADNI_Dataset, train_transform, test_transform
 from torch.utils.data import DataLoader
 import torch.nn as nn
@@ -13,6 +12,7 @@ from torch.utils.data import random_split
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
+from modules import convnext_small
 
 # device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,22 +39,20 @@ test_dataset = ADNI_Dataset(
     root_dir=path, split="test", transform=test_transform
 )
 
-# split test dataset into validation and test sets
-test_size = int(0.5 * len(test_dataset))
-val_size = len(test_dataset) - test_size
+# split train dataset into validation and train sets
+val_size = int(0.2 * len(train_dataset))
+train_size = len(train_dataset) - val_size
 
 # rng generator - set seed for reproducibility
 generator = torch.Generator().manual_seed(0)
-test_dataset, val_dataset = random_split(test_dataset, [test_size, val_size], generator=generator)
+train_dataset, val_dataset = random_split(test_dataset, [train_size, val_size], generator=generator)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 # model
-model = convnext_small(weights=None)
-model.classifier[2] = nn.Linear(in_features=768, out_features=2)
-model = model.to(device)
+model = convnext_small(num_classes=2)
 
 # loss function
 criterion = nn.CrossEntropyLoss()
@@ -131,7 +129,7 @@ for epoch in range(num_epochs):
         best_val_loss = epoch_val_loss
         epochs_no_improve = 0
         # save the best current model
-        torch.save(model.state_dict(), "convnext2.pth")
+        torch.save(model.state_dict(), "convnext.pth")
     else:
         # increment if the model hasnt improved this epoch
         epochs_without_improvement += 1
