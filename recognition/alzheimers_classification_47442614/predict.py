@@ -1,9 +1,11 @@
 from dataset import ADNI_Dataset, train_transform, test_transform
 import torch
 from torch.utils.data import DataLoader, random_split
-# from torchvision.models import convnext_small
 from modules import convnext_small
 import pandas as pd
+from PIL import Image
+import matplotlib.pyplot as plt
+import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -46,10 +48,10 @@ def predict_test_set():
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
-                for image, label in zip(labels.cpu().numpy(), predicted.cpu().numpy()):
+                for label, pred in zip(labels.cpu().numpy(), predicted.cpu().numpy()):
                     results.append({
                         "true_label": label,
-                        "predicted_label": predicted.cpu().numpy(),
+                        "predicted_label": pred,
                     })
 
     # save results
