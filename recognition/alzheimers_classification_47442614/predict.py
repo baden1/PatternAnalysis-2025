@@ -1,3 +1,9 @@
+"""
+predict.py
+Contains logic for running inference on the ConvNeXt model on either
+a single image or the whole test dataset.
+"""
+
 from dataset import ADNI_Dataset, train_transform, test_transform
 import torch
 from torch.utils.data import DataLoader, random_split
