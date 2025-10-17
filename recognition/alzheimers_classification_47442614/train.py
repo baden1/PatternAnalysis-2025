@@ -65,7 +65,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimiser,
     mode="min",  # minimise validation loss
     factor=0.1,  # reduce lr by a factor of 10
-    patience=3,  # wait 3 epochs with no improvement before reducing
+    patience=patience,  # wait 10 epochs with no improvement before reducing
     min_lr=1e-7,  # stop reducing below this LR
 )
 
@@ -123,22 +123,9 @@ for epoch in range(num_epochs):
         f"Val Acc: {val_accuracy:.4f}"
     )
 
-    # early stopping
+    # save model with the best validation loss
     if epoch_val_loss < best_val_loss:
-        # made a better model - reset patience counter
-        best_val_loss = epoch_val_loss
-        epochs_no_improve = 0
-        # save the best current model
         torch.save(model.state_dict(), "convnext.pth")
-    else:
-        # increment if the model hasnt improved this epoch
-        epochs_without_improvement += 1
-
-    if epochs_without_improvement >= patience:
-        # stop if no improvement over the patience limit
-        print(f"Early stopping at epoch {epoch+1}")
-        early_stop = True
-        break
 
 # save loss and lr history to csv
 os.makedirs("logs", exist_ok=True)
