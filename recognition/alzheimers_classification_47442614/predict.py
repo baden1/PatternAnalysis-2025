@@ -13,6 +13,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import argparse
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -64,6 +65,16 @@ def predict_test_set():
     # evaluate accuracy
     print(f"Test Accuracy: {100 * correct / total:.2f}%")
 
+    # confusion matrix
+    cm = confusion_matrix(df[['true_label']], df[['predicted_label']])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=test_dataset.classes)
+
+    # Plot and save confusion matrix
+    disp.plot(cmap=plt.cm.Blues)
+    plt.title("Confusion Matrix")
+    plt.savefig("confusion_matrix.png")
+    plt.show()
+
 
 def predict_single_image(image_path):
     """Predicts the label of a single image and displays the image and prediction
@@ -93,6 +104,7 @@ def predict_single_image(image_path):
 
 
 if __name__ == "__main__":
+    # parse command line arguments
     parser = argparse.ArgumentParser(description="Run inference on the ConvNeXt model.")
     parser.add_argument('--single', type=str, help="Path to a single image for prediction.")
     args = parser.parse_args()

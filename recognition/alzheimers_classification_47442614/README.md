@@ -38,7 +38,7 @@ conda activate env
 
 - Download dependencies
 ```bash
-pip install torch torchvision numpy pandas matplotlib Pillow seaborn
+pip install torch torchvision numpy pandas matplotlib Pillow scikit-learn
 ```
 - This will install the following dependencies:
     - PyTorch 2.9.0
@@ -47,7 +47,7 @@ pip install torch torchvision numpy pandas matplotlib Pillow seaborn
     - pandas 2.3.3
     - matplotlib 3.10.7
     - pillow 12.0.0
-    - seaborn 0.13.2
+    - scikit-learn 1.7.2
 
 ## Usage
 
@@ -60,11 +60,11 @@ This will save the trained model state dictionary, along with a log of training 
 ```bash
 python predict.py
 ```
-This will save a log of each training image evaluated, its predicted label and its true label `test_results.csv` to the current directory. It will also print the test set accuracy to the console.
+This will save a log of each training image evaluated, its predicted label and its true label `test_results.csv` to the current directory. It will show the confusion matrix and save it to the current directory as `confusion_matrix.png` It will also print the test set accuracy to the console.
 
 ### To predict a single image:
 ```bash
-python predict.py --single /path/to/image.jpg
+python predict.py --single path/to/image.jpg
 ```
 This will display a figure of the provided image along with its predicted label. 
 
@@ -114,6 +114,8 @@ The dataset is already split into roughly 70% training and 30% testing, but I de
 - alg
     - scheduler
     - save model with best val loss
+- loss
+- optimiser
 
 ## TODO: Results
 
@@ -127,6 +129,9 @@ The dataset is already split into roughly 70% training and 30% testing, but I de
 
 ## TODO: Conclusion / extensions
 
+- use other info from the patient: ct scans, medical history, other health measurements (ie blood tests, scans, medical imaging)
+- family history
+- 
 ## References
 
 Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., & Xie, S. (2022). A ConvNet for the 2020s. Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022, 5578–5588. https://doi.org/10.1109/CVPR52688.2022.00547
