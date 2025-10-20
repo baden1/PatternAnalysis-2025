@@ -20,7 +20,8 @@ print(device)
 
 batch_size = 32
 
-dataset_path = "/home/groups/comp3710/ADNI/AD_NC"
+# path to dataset
+dataset_path = os.path.join(os.path.dirname(__file__), 'ADNI', 'AD_NC')
 
 # datasets / dataloaders
 test_dataset = ADNI_Dataset(

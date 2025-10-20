@@ -55,12 +55,14 @@ pip install torch torchvision numpy pandas matplotlib Pillow scikit-learn
 ```bash
 python train.py
 ```
-This will save the trained model state dictionary, along with a log of training history, a plot of learning rate history and a plot of train and validation loss to the current directory. Using this trained model, inference can be run on the entire test set or a specific image.
+This will save the trained model state dictionary `training_log.csv`, along with a log of training history, a plot of learning rate history `lr_history.png` and a plot of train and validation loss `loss_history.png` to the current directory. 
+
+Using this trained model, inference can be run on the entire test set or a specific image.
 ### To run inference on the entire test set:
 ```bash
 python predict.py
 ```
-This will save a log of each training image evaluated, its predicted label and its true label `test_results.csv` to the current directory. It will show the confusion matrix and save it to the current directory as `confusion_matrix.png` It will also print the test set accuracy to the console.
+This will save a log of each training image evaluated, its predicted label and its true label `test_results.csv` to the current directory. It will display the confusion matrix and save it to the current directory as `confusion_matrix.png` It will also print the test set accuracy to the console.
 
 ### To predict a single image:
 ```bash

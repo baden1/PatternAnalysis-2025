@@ -29,21 +29,22 @@ best_val_loss = float("inf")
 epochs_without_improvement = 0
 early_stop = False
 
-path = "/home/groups/comp3710/ADNI/AD_NC"
+# path to dataset
+dataset_path = os.path.join(os.path.dirname(__file__), 'ADNI', 'AD_NC')
 
 # datasets / dataloaders
 train_dataset = ADNI_Dataset(
-    root_dir=path, split="train", transform=train_transform
+    root_dir=dataset_path, split="train", transform=train_transform
 )
 test_dataset = ADNI_Dataset(
-    root_dir=path, split="test", transform=test_transform
+    root_dir=dataset_path, split="test", transform=test_transform
 )
 
 # split train dataset into validation and train sets
 val_size = int(0.2 * len(train_dataset))
 train_size = len(train_dataset) - val_size
 
-# rng generator - set seed for reproducibility
+# rng - set seed for reproducibility
 generator = torch.Generator().manual_seed(0)
 train_dataset, val_dataset = random_split(test_dataset, [train_size, val_size], generator=generator)
 
@@ -75,7 +76,6 @@ lr_history = []
 
 # training loop
 for epoch in range(num_epochs):
-    print(f'starting epoch {epoch+1}/{num_epochs}')
     model.train()
     running_loss = 0.0
     for images, labels in train_loader:
@@ -128,13 +128,12 @@ for epoch in range(num_epochs):
         torch.save(model.state_dict(), "convnext.pth")
 
 # save loss and lr history to csv
-os.makedirs("logs", exist_ok=True)
 df = pd.DataFrame({
     'train_loss': train_losses,
     'val_loss': val_losses,
     'learning_rate': lr_history
 })
-df.to_csv(os.path.join('logs', 'training_log2.csv'), index_label='epoch')
+df.to_csv('training_log.csv', index_label='epoch')
 
 # plot training and validation loss
 plt.figure(figsize=(8, 5))
@@ -144,8 +143,7 @@ plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Training & Validation Loss")
 plt.legend()
-os.makedirs("figs", exist_ok=True)
-plt.savefig(os.path.join("figs", "loss_curve.png"))
+plt.savefig('loss_history.png')
 
 
 # plot learning rate history
@@ -154,4 +152,4 @@ plt.semilogy(range(len(lr_history)), lr_history)
 plt.xlabel("Epoch")
 plt.ylabel("Learning Rate")
 plt.title("ReduceLROnPlateau Learning Rate History")
-plt.savefig(os.path.join("figs", "lr_history.png"))
+plt.savefig("lr_history.png")
