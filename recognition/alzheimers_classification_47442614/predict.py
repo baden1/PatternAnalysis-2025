@@ -12,23 +12,20 @@ import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
 import os
+import argparse
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 batch_size = 32
 
-path = "/home/groups/comp3710/ADNI/AD_NC"
+dataset_path = "/home/groups/comp3710/ADNI/AD_NC"
 
 # datasets / dataloaders
-train_dataset = ADNI_Dataset(
-    root_dir=path, split="train", transform=train_transform
-)
 test_dataset = ADNI_Dataset(
-    root_dir=path, split="test", transform=test_transform
+    root_dir=dataset_path, split="test", transform=test_transform
 )
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 # load model
@@ -96,5 +93,12 @@ def predict_single_image(image_path):
 
 
 if __name__ == "__main__":
-    predict_single_image(os.path.join('dataset', 'AD_NC', 'test', 'AD', '388206_78.jpeg'))
+    parser = argparse.ArgumentParser(description="Run inference on the ConvNeXt model.")
+    parser.add_argument('--single', type=str, help="Path to a single image for prediction.")
+    args = parser.parse_args()
+
+    if args.single:
+        predict_single_image(args.single)
+    else:
+        predict_test_set()
     
