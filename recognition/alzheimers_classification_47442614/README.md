@@ -8,7 +8,7 @@
 
 The aim of this project is to make use of MRI scan images of brains in the ADNI dataset to classify the presence of Alzheimer's disease. Making use of the powerful convolutional neural network (CNN) ConvNeXt, we aim to achieve a predictive accuracy of at least 80% in testing.
 
-ConvNeXt (Liu et al., 2022) is a modern CNN designed to match the performance of Vision Transformers (ViTs) while keeping the efficiency and learning patterns of CNNs. Based on the ResNet-50 architecture, it was updated using design ideas from transformer models.
+ConvNeXt [[1](https://doi.org/10.1109/CVPR52688.2022.00547)] is a modern CNN designed to match the performance of Vision Transformers (ViTs) while keeping the efficiency and learning patterns of CNNs. Based on the ResNet-50 architecture, it was updated using design ideas from transformer models.
 
 ## Environment Setup
 
@@ -78,7 +78,7 @@ This will display a figure of the provided image along with its predicted label.
 
 ## Dataset
 
-The dataset provided by Alzheimer's Disease Neuroimaging Initiative (ADNI) [[1](https://adni.loni.usc.edu/data-samples/adni-data/)] contains 30,520 images of MRI scans of brains, which are labeled into two categories: Alzheimer's Disease (AD) and Normal Control (NC). The training set contains 10,400 AD images and 11,120 NC images. The test set contains 4,460 AD images and 4,540 NC images.
+The dataset provided by Alzheimer's Disease Neuroimaging Initiative (ADNI) [[2](https://adni.loni.usc.edu/data-samples/adni-data/)] contains 30,520 images of MRI scans of brains, which are labeled into two categories: Alzheimer's Disease (AD) and Normal Control (NC). The training set contains 10,400 AD images and 11,120 NC images. The test set contains 4,460 AD images and 4,540 NC images.
 
 The dataset is fairly balanced between AD and NC, which helps prevent bias toward one class during training. The dataset has a roughly 29% split to test data, which is a reasonable amount with respect to common machine learning research and practise.  
 
@@ -110,14 +110,50 @@ The dataset is already split into roughly 70% training and 30% testing, but I de
 - Train: 17,216 (56.4%)
 - Validation: 4,304 (14.1%)
 
-## TODO: Training
+## Training
 
-- hypers
-- alg
-    - scheduler
-    - save model with best val loss
-- loss
-- optimiser
+The model training involved creating and training a ConvNeXt small model from scratch. Training was performed on the UQ `rangpur` compute cluster with an A100 GPU. The training loop involved the following congiguration and algorithm.
+
+
+### Configuration
+
+**Loss function**: Binary cross-entropy loss was used for training, which is a commonly used and robust loss function for binary classification.
+
+**Learning rate**: A `ReduceLROnPlateau` learning rate scheduler was implemented for model training. The hyperparameters for this were set using the following.
+- Initial learning rate: $10^{-3}$
+- Patience: 10
+- Factor: 0.1
+- Minimum learning rate: $10^{-7}$
+
+The follwing code snippet from `train.py` implements this:
+
+```python
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimiser,
+    mode="min",  # minimise validation loss
+    factor=0.1,  # reduce LR by a factor of 10
+    patience=10,  # wait 10 epochs with no improvement before reducing
+    min_lr=1e-7,  # stop reducing below this LR
+)
+```
+
+A learning rate scheduler such as the one implemented here helps the model reach a better minimum loss, and adapts the learning rate dynamically to the progress of the model's training. This specific scheduler decreases the learning rate when performance is not improving much during training. The performance of the model is measured by validation loss, so when the scheduler sees it hasn't improved in 10 epochs, it reduces the learning rate. This allows the model to make more precise steps in the loss curve and each a better minimum value.
+
+**Optimiser**: An AdamW optimser was used for training. The authors of the original ConvNeXt paper recommended this optimiser for model training since it captures the advantages of transformer model-based training with the benefits of a CNN [[1](https://doi.org/10.1109/CVPR52688.2022.00547)].
+
+**Model checkpointing**: Model checkpointing was implemented in training. The model achieving the best validation loss across the trianing period was saved as the final model. Doing this ensured the model that achieved the best results was used, without overfitting.  
+
+### Training loop
+
+The training loop for the model consists of four main steps, repeated for every epoch.
+
+**1. Forward Pass.** The output of the model is computed for every image in the training set.
+
+**2. Calculate Loss**. The outputs of the model are compared to the images' true labels in order to calculate the value of the loss function. 
+
+**3. Backpropogate Loss**. Stochastic gradient descent (SGD) is used as part of the AdamW optimiser to iterate the model's weights closer to the minimum value. 
+
+**4. Update Scheduler**. The loss is calculated on the validation set to monitor the model's performance during training. The learning rate is reduced if the validation loss hasn't improved within reason.
 
 ## TODO: Results
 
