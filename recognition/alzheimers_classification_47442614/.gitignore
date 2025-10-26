@@ -54,7 +54,3 @@ venv.bak/
 dataset/
 figs/
 *.pth
-
-# outputs
-*.png
-*.csv
