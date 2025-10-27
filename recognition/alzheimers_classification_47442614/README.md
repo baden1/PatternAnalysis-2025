@@ -73,6 +73,7 @@ This will display a figure of the provided image along with its predicted label.
 ## Model Architecture / Selection
 
 ![Alt text for the image](images/convnext-diagram.png "ConvNeXt Model Design")
+
 *ConvNeXt Model Layers & Design.* [[2](https://www.researchgate.net/publication/374280827_Deep_transfer_learning_rolling_bearing_fault_diagnosis_method_based_on_convolutional_neural_network_feature_fusion)]
 
 The ConvNeXt model consists of the following main components:
@@ -209,17 +210,63 @@ The training loop for the model consists of four main steps, repeated for every 
 
 **4. Update Scheduler**. The loss is calculated on the validation set to monitor the model's performance during training. The learning rate is reduced if the validation loss hasn't improved within reason.
 
-## TODO: Results
+## Results
 
-- accuracy / evaluation 
+### Performance
 
-- what happened during training
-- - observations
-- - overfitting / underfitting ?
-- results on test set
-- - confusion matrix
+The model achieved an accuracy of 80.48%. This indicates that the ConvNeXt small architecture was able to effectively differentiate differences between AD and NC images. 
 
-## TODO: Conclusion / extensions
+The confusion matrix of the results is shown below, indicating the rate of true positives, true negatives, false positives and false negatives. 
+
+![Confusion Matrix](images/confusion_matrix.png "Confusion Matrix")
+
+#### Other Performance Metrics
+
+- Precision - 80.77%: Rate of AD predictions that were correct. A high precision tells us the model rarely labels an image as AD unless it truly is. 
+
+- Recall - 80.47%: Proportion of actual AD cases the model correctly identifies. A high recall indicates the model correcly labels an image as AD when it is present.
+
+- F1 - 80.62%: Harmonic mean of precision and recall, balancing both precision and recall. A high F1 means the model performed well in both above cases. 
+
+### Training and Validation Loss
+
+The plot of train and validation loss across the training period is shown below. 
+
+![Traning and validation loss](images/loss_curve.png "Traning and validation loss")
+
+The training loss decreased quickly at the start of the training period, from epochs 1-30, reducing from roughly 0.7 to 0.1. After this point, it remained relatively flat. However, the validation loss decreased more slowly and steadily, hovering around a value of around 0.7 after roughly 60 epochs. The lowest validation loss recorded was 0.46, which occured at epoch 71. Since model checkpointing was used, this model was saved as the final model.
+
+Additionally, the plot shows a clear gap between train and validation loss over the entire training period. This indicates that the model was fitting to the training data very closely, but was not able to generalise as well to unseen data. 
+
+The fluctuations in validation loss also indicate that the model’s performance on the validation set varies between epochs. However, the fact that the validation loss stops decreasing and stabilizes after epoch 60 suggests that the model has reached its best generalization point around that time.
+
+While it is expected that ML models will have a gap between training and validation/test loss, the fact that there is a significant gap between validation and train loss is demonstrates a gap in generalisation. This is a sign that the model is overfitting to some degree. Also, the fact that train loss reduces to a near-zero value shows that the model is learning complex features, so it is definitely not underfitting.
+
+### Learning Rate Scheduler
+
+The plot of learning rate over epochs from the `ReduceLROnPlateau` learning rate scheduler is shown below.
+
+![Learning rate scheduler](images/schedule.png "Learning rate scheduler")
+
+The plot shows that the learning rate starts at $10^{-3}$ and decreases in steps throughout training:
+
+- Epochs 0–19: LR = $10^{-3}$
+
+- Epochs 20–38: LR = $10^{-4}$
+
+- Epochs 39–51: LR = $10^{-5}$
+
+- Epochs 52–64: LR = $10^{-6}$
+
+- Epochs 65–100: LR = $10^{-7}$
+
+This pattern matches the expected behaviour - the learning rate is reduced by a factor of 10 when the validation loss stops improving for a set number of epochs. 
+
+The multiple reductions in the learning rate show that the model hit several plateaus during training, where validation loss stopped improving by a significant amount. At the start of training, the high learning rate ($10^{-3}$) allowed for large, fast updates. This also aligns with the rapid drop seen in training loss at the start of training. However, near the end of training, the learning rate updates had less of an impact, which can be seen by the fact that each learning rate update only lasted slightly longer than the patience parameter (10). This being said, the smaller learning rate did help with fine-tuning the model's weights in the later part of trainig, after the big reduction in loss at the beginning.
+
+Overall, the The `ReduceLROnPlateau` scheduler helped the model converge smoothly by slowing learning as it approached a minimum.
+
+## Potential Extensions and Improvements
 
 - use other info from the patient: ct scans, medical history, other health measurements (ie blood tests, scans, medical imaging)
 - family history
@@ -227,6 +274,10 @@ The training loop for the model consists of four main steps, repeated for every 
 
 - effect of false negatives/ false positives?
 - give uncertain decision for range of r ?
+
+## Conclusion
+
+
 ## References
 
 1. Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., & Xie, S. (2022). A ConvNet for the 2020s. Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022, 5578–5588. https://arxiv.org/abs/2201.03545
