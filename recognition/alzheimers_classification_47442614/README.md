@@ -1,6 +1,6 @@
 # Classifying Alzheimer's Disease on ADNI Dataset Using ConvNeXt Small
 
-**Author:** Baden Forster (s4744261)
+**Author:** Baden Forster (s47442614)
 
 ---
 
@@ -70,15 +70,69 @@ python predict.py --single path/to/image.jpg
 ```
 This will display a figure of the provided image along with its predicted label. 
 
-## TODO: Model Architecture / Selection
-- componenets of model
-- layers
-- tiny vs small
+## Model Architecture / Selection
 
+![Alt text for the image](images/convnext-diagram.png "ConvNeXt Model Design")
+*ConvNeXt Model Layers & Design.* [[2](https://www.researchgate.net/publication/374280827_Deep_transfer_learning_rolling_bearing_fault_diagnosis_method_based_on_convolutional_neural_network_feature_fusion)]
+
+The ConvNeXt model consists of the following main components:
+- **ConvNeXt *block***
+    - The main computational unit of the network
+    - Makes use of:
+        - Depthwise convolution
+        - Layer norm
+        - Traditional 2d convolution
+        - GELU activation
+    - This combination of layers efficiently extracts spatial features
+- **Down Sample**
+    - Reduces the resolution of the features, while increasing the number of channels
+    - This allows the network to capture high level features
+- **Layer Norm**
+    - Standardises feature values 
+    - This prevents values from going outside a steady range and helps ensure the model converges
+- **Linear Layer**
+    - Fully connected layer
+    - Projects learned features to logits to be used in classification
+- **Softmax Classification Layer**
+    - Applies the softmax function to logits attained from the linear layer
+    - Gives a probability distribution over the output classes
+
+These components are implemented in the following order:
+1. Convolutional layer
+    - The model scans the image using convolution to pick up on simple patterns like edges
+2. Layer norm
+    - Standardises the features learned from the convolution to keep learning steady
+3. (ConvNeXt block + down sample) * 3 (stages 1-3)
+    - Gradually make the model learn more complex features
+    - Downsampling shrinks the image size while increasing channel dimension
+    - Repeating the block mutiple times represents learning increasingly complex features 
+4. ConvNeXt block + global average pooling (stage 4)
+    - Final block layer to learn complex features
+    - Pooling summarises learned features to a compact representation
+5. Layer norm
+    - Normalise result of recursively applied blocks
+    - Ensures slassification layers receive clean standard inputs 
+6. Linear layer
+    - Converts learned features to class logits
+7. Softmax classification layer
+    - Converts logits to a probability distribution over classes
+
+### Selection of ConvNeXt variants
+
+Two variants of the ConvNeXt model were considered for this problem - small and tiny. 
+Both variants share the same overall architecture.
+The difference lies in the number of times the ConvNeXt block is repeated in the third stage. In the tiny variant, it is repeated 9 times, while in the small variant it is repeated 27 times [[3](https://github.com/facebookresearch/ConvNeXt/)].
+
+This results in the tiny variant having roughly 29M parameters, and the small variant having roughly 50M parameters. 
+
+The increase in repeated ConvNeXt blocks allows the network to extract richer and more complex features of the training images. This allows it to better capture the differences between AD and NC images.
+However, the increase in complexity can lead to overfitting where the model learns unimportant noise in the training images.
+
+The small variant is a good compromise between complexity and computational efficiency, so it was chosen as the model variant for this problem.
 
 ## Dataset
 
-The dataset provided by Alzheimer's Disease Neuroimaging Initiative (ADNI) [[2](https://adni.loni.usc.edu/data-samples/adni-data/)] contains 30,520 images of MRI scans of brains, which are labeled into two categories: Alzheimer's Disease (AD) and Normal Control (NC). The training set contains 10,400 AD images and 11,120 NC images. The test set contains 4,460 AD images and 4,540 NC images.
+The dataset provided by Alzheimer's Disease Neuroimaging Initiative (ADNI) [[4](https://adni.loni.usc.edu/data-samples/adni-data/)] contains 30,520 images of MRI scans of brains, which are labeled into two categories: Alzheimer's Disease (AD) and Normal Control (NC). The training set contains 10,400 AD images and 11,120 NC images. The test set contains 4,460 AD images and 4,540 NC images.
 
 The dataset is fairly balanced between AD and NC, which helps prevent bias toward one class during training. The dataset has a roughly 29% split to test data, which is a reasonable amount with respect to common machine learning research and practise.  
 
@@ -169,9 +223,16 @@ The training loop for the model consists of four main steps, repeated for every 
 
 - use other info from the patient: ct scans, medical history, other health measurements (ie blood tests, scans, medical imaging)
 - family history
-- 
+
+
+- effect of false negatives/ false positives?
+- give uncertain decision for range of r ?
 ## References
 
-Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., & Xie, S. (2022). A ConvNet for the 2020s. Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022, 5578–5588. https://doi.org/10.1109/CVPR52688.2022.00547
+1. Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., & Xie, S. (2022). A ConvNet for the 2020s. Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2022, 5578–5588. https://arxiv.org/abs/2201.03545
 
-Alzheimer’s Disease Neuroimaging Initiative (2025). *ADNI Data*. Retrieved from https://adni.loni.usc.edu/data-samples/adni-data/
+2. Yu, Di & Fu, Haiyue & Song, Yanchen & Xie, Wenjian & Zhijie, Xie. (2023). Deep transfer learning rolling bearing fault diagnosis method based on convolutional neural network feature fusion. Measurement Science and Technology. 35. 10.1088/1361-6501/acfe31. https://www.researchgate.net/publication/374280827_Deep_transfer_learning_rolling_bearing_fault_diagnosis_method_based_on_convolutional_neural_network_feature_fusion
+
+3. Facebook Research. (2023) ConvNeXt [GitHub repository]. https://github.com/facebookresearch/ConvNeXt/
+
+4. Alzheimer’s Disease Neuroimaging Initiative (2025). *ADNI Data*. Retrieved from https://adni.loni.usc.edu/data-samples/adni-data/
