@@ -268,15 +268,23 @@ Overall, the The `ReduceLROnPlateau` scheduler helped the model converge smoothl
 
 ## Potential Extensions and Improvements
 
-- use other info from the patient: ct scans, medical history, other health measurements (ie blood tests, scans, medical imaging)
-- family history
+### Additional Data
 
+More investigation could be done to incorporate more modes and sources of data to make predictions related to the presence of Alzheimer's disease. For example, other medical imaging such as CT scans could be useful to predict AD. Apart from medical imaging, other clinical data such as patient test data could be used as features to other methods and models could improve prediction outcomes.
 
-- effect of false negatives/ false positives?
-- give uncertain decision for range of r ?
+### Improvements to the model
+
+There are a few additional strategies that could be implemented to improve model performance and generalisation.
+To reduce overfitting, regularization techniques such as dropout, weight decay, and data augmentation could be investigated further.
+Additionally, other models and architectures could be investigated, such as other CNN architectures (VGG, ResNet, EfficientNet, etc). Vision transformer models could also be implemented to solve this problem which could provide benefits in global context awareness which could improve performance.
+
+### Interpretability
+
+Investigating the interpretability of the model's outputs is very important since it is making a prediction concering a patient's health. More work could be done to investigate the consequences of false positives and false negatives.
 
 ## Conclusion
 
+The powerful ConvNeXt architecture was successfully able to classify AD and NC MRI scan images, achieving an accuracy of over 80%. These are good results for the task but the observed gap between training and validation loss indicates some overfitting that should be mitigated in future work. Overall, this project provides a reproducible baseline and evaluation pipeline for Alzheimer's classification on the ADNI dataset, and the code and checkpoints are provided to facilitate continued experimentation and extension.
 
 ## References
 
